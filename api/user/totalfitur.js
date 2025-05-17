@@ -2,12 +2,12 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = {
-  name: 'TotalApi',
+  name: 'Total Api',
   desc: 'Menampilkan total semua fitur dari semua kategori',
   category: 'User',
   async run(req, res) {
     try {
-      const baseDir = path.join(__dirname); // mengarah ke folder 'api'
+      const baseDir = path.join(__dirname, '../..'); // naik ke folder 'api'
       const categories = fs.readdirSync(baseDir).filter(file => {
         const fullPath = path.join(baseDir, file);
         return fs.statSync(fullPath).isDirectory();
