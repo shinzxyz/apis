@@ -1,18 +1,34 @@
 const axios = require('axios');
+const path = require('path');
 
 module.exports = {
-    name: 'Waifu',
-    desc: 'Random waifu image from waifu.pics',
+    name: 'waifu',
+    desc: 'Random waifu from waifu.pics',
     category: 'SFW',
     async run(req, res) {
         try {
+            // Ambil URL media
             const { data } = await axios.get('https://api.waifu.pics/sfw/waifu');
-            if (!data?.url) return res.status(500).json({ status: false, error: 'No image found' });
+            const fileUrl = data?.url;
+            if (!fileUrl) return res.status(500).json({ status: false, error: 'No media found' });
 
-            res.status(200).json({
-                status: true,
-                url: data.url
-            });
+            // Ambil ekstensi file
+            const ext = path.extname(fileUrl).toLowerCase();
+
+            // Ambil buffer media
+            const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+
+            // Set header berdasarkan tipe file
+            const contentType = {
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.gif': 'image/gif',
+                '.mp4': 'video/mp4'
+            }[ext] || 'application/octet-stream';
+
+            res.setHeader('Content-Type', contentType);
+            res.send(response.data);
         } catch (err) {
             res.status(500).json({ status: false, error: err.message });
         }
