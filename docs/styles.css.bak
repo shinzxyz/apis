@@ -731,12 +731,3 @@ button, .material-icons {
 .category-nav {
   overscroll-behavior-x: contain; /* Mencegah overscroll */
 }
-
-body {
-  overflow-x: hidden;
-  width: 100%;
-}
-
-input, button, textarea, select {
-  font-size: 16px; /* Ukuran font minimum untuk mencegah zoom */
-}
