@@ -277,7 +277,6 @@ nav::before {
     box-shadow: 0 4px 12px rgba(122, 160, 149, 0.15);
     overflow: hidden;
     margin-bottom: 30px;
-    margin-top: 15px;
 }
 
 /* Remove the corner dots */
