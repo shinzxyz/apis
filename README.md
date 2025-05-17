@@ -1,6 +1,6 @@
-# Hiuraa-API-Base
+# YoedzKey
 
-**Hiuraa-API-Base** is a simple, yet powerful and highly customizable REST API foundation. Built with Express.js, it provides developers with a solid starting point to create their own API services with minimal setup and maximum flexibility.
+**YoedzKey** is a simple, yet powerful and highly customizable REST API foundation. Built with Express.js, it provides developers with a solid starting point to create their own API services with minimal setup and maximum flexibility.
 
 ## Features
 
@@ -32,18 +32,19 @@ npm install
 3. Modify the `settings.js` file:
 ```javascript
 module.exports = {
+module.exports = {
     name: {
-        main: 'Hiuraa API Base !!',
-        copyright: 'Hiuraa API Base'
+        main: 'YoedzXy Api',
+        copyright: 'YoedzXy Api Xion'
     },
     description: 'Integrated API solution for your modern application development needs. Fast, secure, and reliable access.',
     icon: '/image/icon.png',
-    author: 'Rynn',
-    info_url: 'https://whatsapp.com/channel/0029Vb9MIdiDDmFXasVPVG1t',
+    author: 'Yudz',
+    info_url: 'https://whatsapp.com/channel/0029Vb0v3F71yT264EejzJ3e',
     links: [
         {
-            name: 'WhatsApp Information Ch.',
-            url: 'https://whatsapp.com/channel/0029Vb9MIdiDDmFXasVPVG1t'
+            name: 'Channel WhatsApp Inf.',
+            url: 'https://whatsapp.com/channel/0029Vb0v3F71yT264EejzJ3e'
         }
     ]
 };
@@ -113,5 +114,5 @@ A built-in scraper system that:
 
 ## Author
 
-Created by Rynn.
+Created by Yoedz.
 Feel free to contribute, report issues, or suggest improvements!
