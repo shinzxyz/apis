@@ -1,0 +1,28 @@
+{
+  "name": "hiuraa-api-base",
+  "version": "1.0.0",
+  "description": "just a base :3",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "rynn",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.6.8",
+    "chalk": "^4.1.2",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "express": "^4.19.2",
+    "form-data": "^4.0.2",
+    "fs": "^0.0.1-security",
+    "javascript-obfuscator": "^4.1.1",
+    "multer": "^1.4.5-lts.2",
+    "node-fetch": "^2.7.0",
+    "path": "^0.12.7",
+    "yt-search": "^2.13.1"
+  }
+}
