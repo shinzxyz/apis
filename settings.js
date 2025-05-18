@@ -1,7 +1,7 @@
 module.exports = {
     name: {
-        main: 'YoedzXy Api',
-        copyright: 'YoedzXy Api Xion'
+        main: 'YoedzX API',
+        copyright: 'YoedzXy Api On Xion'
     },
     description: 'Integrated API solution for your modern application development needs. Fast, secure, and reliable access.',
     icon: '/image/icon.png',

@@ -287,7 +287,7 @@ fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
     app.use(express.static(path.join(__dirname)));
 
     // Serve docs from /docs subdirectory
-    app.use('/docs', express.static(path.join(__dirname, 'docs')));
+    app.use('/docs', express.static(path.join(__dirname, 'docs', 'index.html')));
 
 
     app.use((req, res, next) => {
