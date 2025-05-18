@@ -33,7 +33,7 @@
     
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
-    app.use('/', express.static(path.join(__dirname, 'docs')));
+    app.use('/', express.static(path.join(__dirname, 'index.html')));
     
     logger.info('Starting server initialization...');
     
