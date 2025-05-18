@@ -283,6 +283,13 @@ fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
     // Run check every hour
     setInterval(checkForMonthlyReset, 60 * 60 * 1000);
     
+    // Serve static files from root
+    app.use(express.static(path.join(__dirname)));
+
+    // Serve docs from /docs subdirectory
+    app.use('/docs', express.static(path.join(__dirname, 'docs')));
+
+
     app.use((req, res, next) => {
         logger.info(`404: ${req.method} ${req.path}`);
         res.status(404).sendFile(process.cwd() + '/docs/err/404.html');

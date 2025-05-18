@@ -4,7 +4,6 @@ module.exports = {
     name: 'cekapikey',
     desc: 'Cek status API key dengan mengambil data dari endpoint /apikey/status',
     category: 'User',
-    params: [''],
     async run(req, res) {
         const { apikey } = req.query;
         if (!apikey) return res.status(400).json({ status: false, error: 'API key is required' });
