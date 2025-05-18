@@ -9,8 +9,15 @@ module.exports = {
   desc: 'Download lagu dari Spotify dengan metode alternatif.',
   params: ['url'],
   async run({ query }, res) {
-    const spotifydown = async (url) => {
-      if (!url || !url.includes('spotify.com')) throw new Error('Input URL dari Spotify!');
+    try {
+      if (!query || typeof query !== 'string' || !query.includes('spotify.com')) {
+        return res.status(400).json({
+          status: false,
+          statusCode: 400,
+          creator: 'yudz',
+          message: 'Masukkan URL Spotify yang valid.'
+        });
+      }
 
       const encodeBase64 = (trackUrl, trackName, artistName) => {
         const raw = `__/:${trackUrl}:${trackName}:${artistName}`;
@@ -20,48 +27,66 @@ module.exports = {
       const headers = {
         'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36',
         'Referer': 'https://spotify-down.com/',
+        'Content-Type': 'application/json'
       };
 
+      // Step 1: Get metadata
       const metaRes = await axios.post('https://spotify-down.com/api/metadata', null, {
-        params: { link: url },
-        headers,
+        params: { link: query },
+        headers
       });
 
       const meta = metaRes?.data?.data;
-      if (!meta?.link) throw new Error('Gagal mendapatkan metadata.');
+      if (!meta?.link || !meta?.title || !meta?.artists) {
+        return res.status(500).json({
+          status: false,
+          statusCode: 500,
+          creator: 'yudz',
+          message: 'Gagal mendapatkan metadata dari Spotify.'
+        });
+      }
 
+      // Step 2: Generate token
       const encoded = encodeBase64(meta.link, meta.title, meta.artists);
 
+      // Step 3: Get download link
       const dlRes = await axios.get('https://spotify-down.com/api/download', {
         params: {
           link: meta.link,
           n: meta.title,
           a: meta.artists,
-          t: encoded,
+          t: encoded
         },
-        headers,
+        headers
       });
 
-      return {
-        metadata: meta,
-        download: dlRes?.data?.data?.link,
-      };
-    };
+      const downloadUrl = dlRes?.data?.data?.link;
+      if (!downloadUrl) {
+        return res.status(500).json({
+          status: false,
+          statusCode: 500,
+          creator: 'yudz',
+          message: 'Gagal mendapatkan link download.'
+        });
+      }
 
-    try {
-      if (!query) return res.status(400).json({ status: false, message: 'Masukkan URL Spotify.' });
-
-      const result = await spotifydown(query);
-      if (!result.download) return res.status(500).json({ status: false, message: 'Gagal mendapatkan link download.' });
-
-      const audioBuffer = await fetch(result.download).then(r => r.buffer());
+      // Step 4: Fetch audio buffer
+      const audioBuffer = await fetch(downloadUrl).then(r => r.buffer());
 
       res.setHeader('Content-Type', 'audio/mpeg');
-      res.setHeader('Content-Disposition', `attachment; filename="${result.metadata.title || 'spotify'} - ${result.metadata.artists || 'track'}.mp3"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${meta.title} - ${meta.artists}.mp3"`
+      );
       res.send(audioBuffer);
 
     } catch (err) {
-      res.status(500).json({ status: false, message: err.message });
+      res.status(500).json({
+        status: false,
+        statusCode: 500,
+        creator: 'yudz',
+        message: err.message || 'Terjadi kesalahan pada server.'
+      });
     }
   }
 };
