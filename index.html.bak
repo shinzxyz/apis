@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="REST API praktis untuk pengembangan aplikasi dan BOT WA - YoedzKey">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="/image/icon.png" type="image/png">
     <title>YoedzX API</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -39,7 +42,7 @@
             <div class="mt-6 text-xs text-gray-500 flex gap-4">
                 <a href="https://github.com/shinzxyz" class="hover:text-gray-700">GitHub</a>
                 <a href="/apicek?=&apikey=yoedzx" class="hover:text-gray-700">API Status</a>
-                <a href="/obfus.html" class="hover:text-gray-700">Obfuscate</a>
+                <a href="/docs/obfus.html" class="hover:text-gray-700">Obfuscate</a>
             </div>
         </div>
     </div>
