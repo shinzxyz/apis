@@ -217,17 +217,39 @@
         return endpoints;
     }
     
-    // Serve static files
-    app.use(express.static(path.join(__dirname)));
-    app.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, 'index.html'));
-    });
+// Serve static files from multiple directories
+app.use(express.static(path.join(__dirname))); // Root files
+app.use('/docs', express.static(path.join(__dirname, 'docs'))); // Docs files
+app.use('/image', express.static(path.join(__dirname, 'docs', 'image'))); // Images
 
-    // Proper documentation serving
-    app.use('/docs', express.static(path.join(__dirname, 'docs')));
-    app.get('/docs', (req, res) => {
-        res.sendFile(path.join(__dirname, 'docs', 'index.html'));
-    });
+// Route handlers
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/docs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'docs', 'index.html'));
+});
+
+// Handle JS files
+app.get('/script.js', (req, res) => {
+  const docsPath = path.join(__dirname, 'docs', 'script.js');
+  if (fs.existsSync(docsPath)) {
+    res.sendFile(docsPath);
+  } else {
+    res.status(404).send('Not found');
+  }
+});
+
+// Handle CSS files
+app.get('/style.css', (req, res) => {
+  const docsPath = path.join(__dirname, 'docs', 'style.css');
+  if (fs.existsSync(docsPath)) {
+    res.sendFile(docsPath);
+  } else {
+    res.sendFile(path.join(__dirname, 'style.css'));
+  }
+});
     
     logger.info('Loading API endpoints...');
     const allEndpoints = loadEndpointsFromDirectory('api');
