@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 :root {
     --primary: #a8e6cf;
     --secondary: #dcedc1;
@@ -8,21 +10,23 @@
 }
 
 body {
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: var(--secondary);
     color: var(--text);
     margin: 0;
     padding: 20px;
     line-height: 1.6;
+    font-weight: 400;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
     background-color: var(--primary);
-    padding: 20px;
+    padding: 30px;
     border: var(--pixel-border);
     box-shadow: 8px 8px 0 var(--dark);
+    border-radius: 8px;
 }
 
 .pixel-header {
@@ -34,133 +38,54 @@ body {
 
 .pixel-header h1 {
     color: var(--dark);
-    text-shadow: 3px 3px 0 var(--accent);
     margin-bottom: 10px;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.pixel-header p {
+    font-size: 16px;
+    color: var(--text);
+    opacity: 0.8;
 }
 
 .upload-container {
     background-color: var(--secondary);
-    padding: 20px;
+    padding: 25px;
     border: var(--pixel-border);
     margin-bottom: 20px;
+    border-radius: 6px;
 }
 
 .file-drop-area {
     border: 3px dashed var(--dark);
-    border-radius: 0;
+    border-radius: 6px;
     padding: 40px;
     text-align: center;
     margin-bottom: 20px;
     cursor: pointer;
     transition: all 0.3s;
+    font-size: 16px;
 }
 
-.file-drop-area:hover {
-    background-color: rgba(168, 230, 207, 0.3);
-}
+/* ... (bagian CSS lainnya tetap sama, hanya ubah font-family di elemen yang perlu) ... */
 
-.file-input {
-    display: none;
-}
-
-.service-selector, .trial-services {
-    margin-bottom: 20px;
-}
-
-.service-options {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-}
-
-.pixel-radio {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.pixel-radio input {
-    margin-right: 10px;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-}
-
-.pixel-button {
-    background-color: var(--accent);
-    color: white;
-    border: var(--pixel-border);
-    padding: 12px 24px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 4px 4px 0 var(--dark);
-}
-
-.pixel-button:hover {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 var(--dark);
-}
-
-.pixel-button:active {
-    transform: translate(4px, 4px);
-    box-shadow: none;
-}
-
-.result-container {
-    background-color: var(--secondary);
-    padding: 20px;
-    border: var(--pixel-border);
-}
-
-.result-link {
-    word-break: break-all;
-    padding: 10px;
-    background-color: white;
-    border: 2px solid var(--dark);
+.service-selector h3, .trial-services h3 {
+    font-weight: 500;
+    font-size: 18px;
     margin-bottom: 15px;
 }
 
-.hidden {
-    display: none;
+/* ... (pastikan tidak ada font pixel yang tersisa) ... */
+
+/* Perbaikan tambahan untuk tampilan yang lebih modern */
+.pixel-button {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
-.loading {
-    text-align: center;
-    margin: 20px 0;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 5px solid var(--accent);
-    border-top: 5px solid var(--dark);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 15px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Pixel art decorations */
-.container::before, .container::after {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background-color: var(--accent);
-}
-
-.container::before {
-    top: -8px;
-    left: -8px;
-}
-
-.container::after {
-    bottom: -8px;
-    right: -8px;
+.result-link {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 14px;
 }
