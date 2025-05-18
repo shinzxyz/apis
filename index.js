@@ -9,7 +9,7 @@
     const PORT = process.env.PORT || 3355;
     
     // API Key Configuration
-    const API_KEY = 'yoedzx';
+    const API_KEY = 'zymzz';
     const API_KEY_RESET_MONTH = 1; // Reset on 1st of each month
     const API_KEY_GRACE_PERIOD = 2; // 2-day grace period
     const API_LIMIT = 80000;
