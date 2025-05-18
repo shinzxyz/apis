@@ -222,32 +222,56 @@ app.use(express.static(path.join(__dirname))); // Root files
 app.use('/docs', express.static(path.join(__dirname, 'docs'))); // Docs files
 app.use('/image', express.static(path.join(__dirname, 'docs', 'image'))); // Images
 
-// Route handlers
+// Route handlers with redirect for consistent trailing slashes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Handle both /docs and /docs/ versions
 app.get('/docs', (req, res) => {
+  res.redirect(301, '/docs/'); // Force trailing slash
+});
+
+app.get('/docs/', (req, res) => {
   res.sendFile(path.join(__dirname, 'docs', 'index.html'));
 });
 
-// Handle JS files
+// Special file handlers with fallbacks
 app.get('/script.js', (req, res) => {
-  const docsPath = path.join(__dirname, 'docs', 'script.js');
-  if (fs.existsSync(docsPath)) {
-    res.sendFile(docsPath);
-  } else {
-    res.status(404).send('Not found');
+  const paths = [
+    path.join(__dirname, 'docs', 'script.js'),
+    path.join(__dirname, 'script.js')
+  ];
+  
+  for (const p of paths) {
+    if (fs.existsSync(p)) {
+      return res.sendFile(p);
+    }
   }
+  res.status(404).send('Not found');
 });
 
-// Handle CSS files
-app.get('/style.css', (req, res) => {
-  const docsPath = path.join(__dirname, 'docs', 'style.css');
-  if (fs.existsSync(docsPath)) {
-    res.sendFile(docsPath);
+app.get('/styles.css', (req, res) => {
+  const paths = [
+    path.join(__dirname, 'docs', 'styles.css'),
+    path.join(__dirname, 'styles.css')
+  ];
+  
+  for (const p of paths) {
+    if (fs.existsSync(p)) {
+      return res.sendFile(p);
+    }
+  }
+  res.status(404).send('Not found');
+});
+
+// Favicon handler
+app.get('/image/icon.png', (req, res) => {
+  const iconPath = path.join(__dirname, 'docs', 'image', 'icon.png');
+  if (fs.existsSync(iconPath)) {
+    res.sendFile(iconPath);
   } else {
-    res.sendFile(path.join(__dirname, 'style.css'));
+    res.status(404).send('Favicon not found');
   }
 });
     
