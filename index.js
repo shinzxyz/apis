@@ -35,8 +35,17 @@
     app.use(express.urlencoded({ extended: false }));
     
     logger.info('Starting server initialization...');
-    
-    // API Key Validation Middleware
+
+    // =============================================
+    // STATIC FILE SERVING CONFIGURATION
+    // =============================================
+    app.use(express.static(path.join(__dirname))); // Serve root files
+    app.use('/docs', express.static(path.join(__dirname, 'docs'))); // Serve docs files
+    app.use('/image', express.static(path.join(__dirname, 'docs', 'image'))); // Serve images from docs
+
+    // =============================================
+    // API KEY VALIDATION MIDDLEWARE
+    // =============================================
     function validateApiKey(req, res, next) {
         const now = new Date();
         const currentDay = now.getDate();
@@ -108,6 +117,9 @@
         next();
     }
     
+    // =============================================
+    // RESPONSE FORMATTING MIDDLEWARE
+    // =============================================
     app.use((req, res, next) => {
         const originalJson = res.json;
         res.json = function (data) {
@@ -128,10 +140,16 @@
         next();
     });
     
+    // =============================================
+    // STRING PROTOTYPE EXTENSION
+    // =============================================
     String.prototype.capitalize = function() {
         return this.charAt(0).toUpperCase() + this.slice(1);
     };
     
+    // =============================================
+    // SCRAPER INITIALIZATION
+    // =============================================
     logger.info('Loading scraper module...');
     global.scraper = new(await require('./lib/scrape.js'))('./lib/scrape_file');
     global.scrape = await scraper.list();
@@ -144,6 +162,9 @@
         }
     }, 2000);
     
+    // =============================================
+    // ENDPOINT LOADING
+    // =============================================
     function loadEndpointsFromDirectory(directory, baseRoute = '') {
         let endpoints = [];
         const fullPath = path.join(__dirname, directory);
@@ -217,64 +238,49 @@
         return endpoints;
     }
     
-// Serve static files from multiple directories
-app.use(express.static(path.join(__dirname))); // Root files
-app.use('/docs', express.static(path.join(__dirname, 'docs'))); // Docs files
-app.use('/image', express.static(path.join(__dirname, 'docs', 'image'))); // Images
+    // =============================================
+    // ROUTE HANDLERS
+    // =============================================
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, 'index.html'));
+    });
 
-// Route handlers with redirect for consistent trailing slashes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+    // Handle /docs without redirect
+    app.get('/docs', (req, res) => {
+        res.sendFile(path.join(__dirname, 'docs', 'index.html'));
+    });
 
-// Handle both /docs and /docs/ versions
-app.get('/docs', (req, res) => {
-  res.redirect(301, '/docs/'); // Force trailing slash
-});
+    // Special file handlers
+    app.get('/script.js', (req, res) => {
+        const docsPath = path.join(__dirname, 'docs', 'script.js');
+        if (fs.existsSync(docsPath)) {
+            res.sendFile(docsPath);
+        } else {
+            res.status(404).send('Not found');
+        }
+    });
 
-app.get('/docs/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'docs', 'index.html'));
-});
+    app.get('/style.css', (req, res) => {
+        const docsPath = path.join(__dirname, 'docs', 'styles.css');
+        if (fs.existsSync(docsPath)) {
+            res.sendFile(docsPath);
+        } else {
+            res.sendFile(path.join(__dirname, 'styles.css'));
+        }
+    });
 
-// Special file handlers with fallbacks
-app.get('/script.js', (req, res) => {
-  const paths = [
-    path.join(__dirname, 'docs', 'script.js'),
-    path.join(__dirname, 'script.js')
-  ];
-  
-  for (const p of paths) {
-    if (fs.existsSync(p)) {
-      return res.sendFile(p);
-    }
-  }
-  res.status(404).send('Not found');
-});
+    app.get('/image/icon.png', (req, res) => {
+        const iconPath = path.join(__dirname, 'docs', 'image', 'icon.png');
+        if (fs.existsSync(iconPath)) {
+            res.sendFile(iconPath);
+        } else {
+            res.status(404).send('Favicon not found');
+        }
+    });
 
-app.get('/styles.css', (req, res) => {
-  const paths = [
-    path.join(__dirname, 'docs', 'styles.css'),
-    path.join(__dirname, 'styles.css')
-  ];
-  
-  for (const p of paths) {
-    if (fs.existsSync(p)) {
-      return res.sendFile(p);
-    }
-  }
-  res.status(404).send('Not found');
-});
-
-// Favicon handler
-app.get('/image/icon.png', (req, res) => {
-  const iconPath = path.join(__dirname, 'docs', 'image', 'icon.png');
-  if (fs.existsSync(iconPath)) {
-    res.sendFile(iconPath);
-  } else {
-    res.status(404).send('Favicon not found');
-  }
-});
-    
+    // =============================================
+    // API ENDPOINTS
+    // =============================================
     logger.info('Loading API endpoints...');
     const allEndpoints = loadEndpointsFromDirectory('api');
     console.log('');
@@ -315,6 +321,9 @@ app.get('/image/icon.png', (req, res) => {
         });
     });
     
+    // =============================================
+    // MONTHLY RESET CHECK
+    // =============================================
     function checkForMonthlyReset() {
         const now = new Date();
         if (now.getDate() === API_KEY_RESET_MONTH && now.getHours() === 0 && now.getMinutes() < 1) {
@@ -325,7 +334,9 @@ app.get('/image/icon.png', (req, res) => {
     
     setInterval(checkForMonthlyReset, 60 * 60 * 1000);
     
-    // Error handling
+    // =============================================
+    // ERROR HANDLING
+    // =============================================
     app.use((req, res, next) => {
         logger.info(`404: ${req.method} ${req.path}`);
         res.status(404).sendFile(path.join(__dirname, 'docs', 'err', '404.html'));
@@ -336,6 +347,9 @@ app.get('/image/icon.png', (req, res) => {
         res.status(500).sendFile(path.join(__dirname, 'docs', 'err', '500.html'));
     });
     
+    // =============================================
+    // SERVER STARTUP
+    // =============================================
     app.listen(PORT, () => {
         console.log('');
         logger.ready(`Server started successfully`);

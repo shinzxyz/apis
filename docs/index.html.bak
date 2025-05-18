@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta id="api-description" name="description" content="Rest Api by YoedzKey">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link id="api-icon" rel="icon" href="image/icon.png" type="image/png">
+    <link id="api-icon" rel="icon" href="/image/icon.png" type="image/png">
     <title id="api-title">YoedzKey</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
