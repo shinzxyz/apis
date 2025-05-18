@@ -33,86 +33,80 @@
     
     app.use(express.json());
     app.use(express.urlencoded({ extended: false }));
-    app.use('/', express.static(path.join(__dirname, 'index.html')));
     
     logger.info('Starting server initialization...');
     
     // API Key Validation Middleware
     function validateApiKey(req, res, next) {
-    const now = new Date();
-    const currentDay = now.getDate();
-    const currentMonth = now.getMonth();
-    
-    const apiKey = req.query.apikey || req.body.apikey;
+        const now = new Date();
+        const currentDay = now.getDate();
+        const currentMonth = now.getMonth();
+        
+        const apiKey = req.query.apikey || req.body.apikey;
 
-    // Cek keberadaan API key
-    if (!apiKey) {
-        return res.status(401).json({
-            status: false,
-            message: 'API key is required.'
-        });
+        if (!apiKey) {
+            return res.status(401).json({
+                status: false,
+                message: 'API key is required.'
+            });
+        }
+
+        if (apiKey !== API_KEY) {
+            return res.status(403).json({
+                status: false,
+                message: 'Invalid API key'
+            });
+        }
+
+        if (currentDay <= API_KEY_GRACE_PERIOD && currentDay >= API_KEY_RESET_MONTH) {
+            return res.status(403).json({
+                status: false,
+                message: 'API key is being reset. Please try again after the grace period.'
+            });
+        }
+
+        const ip = req.ip;
+        const currentWindow = Math.floor(now.getTime() / API_RATE_LIMIT_WINDOW);
+        const rateKey = `${ip}:${currentWindow}`;
+
+        if (!rateLimit.has(rateKey)) {
+            rateLimit.set(rateKey, {
+                count: 0,
+                lastReset: now.getTime()
+            });
+        }
+
+        const rateData = rateLimit.get(rateKey);
+        rateData.count++;
+
+        if (rateData.count > API_RATE_LIMIT) {
+            const timeLeft = API_RATE_LIMIT_WINDOW - (now.getTime() - rateData.lastReset);
+            return res.status(429).json({
+                status: false,
+                message: `Too many requests. Please wait ${Math.ceil(timeLeft/1000)} seconds before trying again.`
+            });
+        }
+
+        const usageKey = `${currentMonth}:${apiKey}`;
+        if (!apiUsage.has(usageKey)) {
+            apiUsage.set(usageKey, {
+                count: 0,
+                resetMonth: currentMonth
+            });
+        }
+
+        const usageData = apiUsage.get(usageKey);
+        usageData.count++;
+
+        if (usageData.count > API_LIMIT) {
+            return res.status(429).json({
+                status: false,
+                message: 'Monthly API limit exceeded. The key will reset at the beginning of next month.'
+            });
+        }
+
+        next();
     }
-
-    // Validasi nilai API key
-    if (apiKey !== API_KEY) {
-        return res.status(403).json({
-            status: false,
-            message: 'Invalid API key'
-        });
-    }
-
-    // Grace period (1-2 awal bulan)
-    if (currentDay <= API_KEY_GRACE_PERIOD && currentDay >= API_KEY_RESET_MONTH) {
-        return res.status(403).json({
-            status: false,
-            message: 'API key is being reset. Please try again after the grace period.'
-        });
-    }
-
-    // Rate limit per IP
-    const ip = req.ip;
-    const currentWindow = Math.floor(now.getTime() / API_RATE_LIMIT_WINDOW);
-    const rateKey = `${ip}:${currentWindow}`;
-
-    if (!rateLimit.has(rateKey)) {
-        rateLimit.set(rateKey, {
-            count: 0,
-            lastReset: now.getTime()
-        });
-    }
-
-    const rateData = rateLimit.get(rateKey);
-    rateData.count++;
-
-    if (rateData.count > API_RATE_LIMIT) {
-        const timeLeft = API_RATE_LIMIT_WINDOW - (now.getTime() - rateData.lastReset);
-        return res.status(429).json({
-            status: false,
-            message: `Too many requests. Please wait ${Math.ceil(timeLeft/1000)} seconds before trying again.`
-        });
-    }
-
-    // Cek kuota bulanan
-    const usageKey = `${currentMonth}:${apiKey}`;
-    if (!apiUsage.has(usageKey)) {
-        apiUsage.set(usageKey, {
-            count: 0,
-            resetMonth: currentMonth
-        });
-    }
-
-    const usageData = apiUsage.get(usageKey);
-    usageData.count++;
-
-    if (usageData.count > API_LIMIT) {
-        return res.status(429).json({
-            status: false,
-            message: 'Monthly API limit exceeded. The key will reset at the beginning of next month.'
-        });
-    }
-
-    next();
-}
     
     app.use((req, res, next) => {
         const originalJson = res.json;
@@ -182,14 +176,13 @@
                         const endpointName = item.replace('.js', '');
                         const endpointPath = `${baseRoute}/${endpointName}`;
                         
-                        // Add API key validation to all endpoints
                         app.all(endpointPath, validateApiKey, module.run);
                         
                         let fullPathWithParams = endpointPath;
                         if (module.params && module.params.length > 0) {
-    fullPathWithParams += '?' + module.params.map(param => `${param}=`).join('&');
-}
-fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
+                            fullPathWithParams += '?' + module.params.map(param => `${param}=`).join('&');
+                        }
+                        fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
                         
                         const category = module.category || 'Other';
                         const categoryIndex = endpoints.findIndex(endpoint => endpoint.name === category);
@@ -224,11 +217,17 @@ fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
         return endpoints;
     }
     
+    // Serve static files
+    app.use(express.static(path.join(__dirname)));
     app.get('/', (req, res) => {
         res.sendFile(path.join(__dirname, 'index.html'));
     });
 
-    app.use('/', express.static(path.join(__dirname, 'index.html')));
+    // Proper documentation serving
+    app.use('/docs', express.static(path.join(__dirname, 'docs')));
+    app.get('/docs', (req, res) => {
+        res.sendFile(path.join(__dirname, 'docs', 'index.html'));
+    });
     
     logger.info('Loading API endpoints...');
     const allEndpoints = loadEndpointsFromDirectory('api');
@@ -253,7 +252,6 @@ fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
         });
     });
     
-    // API Key Status Endpoint
     app.get('/apikey/status', (req, res) => {
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -271,7 +269,6 @@ fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
         });
     });
     
-    // Monthly Reset Check
     function checkForMonthlyReset() {
         const now = new Date();
         if (now.getDate() === API_KEY_RESET_MONTH && now.getHours() === 0 && now.getMinutes() < 1) {
@@ -280,24 +277,17 @@ fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
         }
     }
     
-    // Run check every hour
     setInterval(checkForMonthlyReset, 60 * 60 * 1000);
     
-    // Serve static files from root
-    app.use(express.static(path.join(__dirname)));
-
-    // Serve docs from /docs subdirectory
-    app.use('/docs', express.static(path.join(__dirname, 'docs', 'index.html')));
-
-
+    // Error handling
     app.use((req, res, next) => {
         logger.info(`404: ${req.method} ${req.path}`);
-        res.status(404).sendFile(process.cwd() + '/docs/err/404.html');
+        res.status(404).sendFile(path.join(__dirname, 'docs', 'err', '404.html'));
     });
     
     app.use((err, req, res, next) => {
         logger.error(`500: ${err.message}`);
-        res.status(500).sendFile(process.cwd() + '/docs/err/500.html');
+        res.status(500).sendFile(path.join(__dirname, 'docs', 'err', '500.html'));
     });
     
     app.listen(PORT, () => {
