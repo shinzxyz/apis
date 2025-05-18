@@ -4,7 +4,7 @@ const cheerio = require('cheerio');
 module.exports = {
     name: 'Anime Search',
     desc: 'Cari anime dari anime-indo.lol',
-    category: 'Search',
+    category: 'Anime',
     params: ['q'],
     async run(req, res) {
         const { q } = req.query;

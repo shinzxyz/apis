@@ -45,8 +45,8 @@ module.exports = {
       const mime = response.headers['content-type'];
 
       const result = await processImageWithGemini(buffer, mime, prompt);
-      res.setHeader('Content-Type', 'image/png');
-      res.end(finalBuffer); // langsung kirim hasil buffer
+      res.setHeader('Content-Type', mime || 'image/png');
+      res.end(result);
     } catch (err) {
       console.error(err);
       res.status(500).json({ status: false, error: err.message });
