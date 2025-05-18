@@ -5,22 +5,20 @@ const fetch = require('node-fetch');
 
 module.exports = {
   name: 'Spotify v2',
+  desc: 'Download lagu Spotify via metode alternatif (spotify-down.com)',
   category: 'Downloader',
-  desc: 'Download lagu dari Spotify dengan metode alternatif.',
   params: ['url'],
-  async run({ query }, res) {
+  async run(req, res) {
+    const { url } = req.query;
+
+    if (!url || !/https?:\/\/open\.spotify\.com\/track\/[a-zA-Z0-9]+/.test(url)) {
+      return res.status(400).json({
+        status: false,
+        error: 'Parameter url harus berisi link Spotify track yang valid.'
+      });
+    }
+
     try {
-      const decoded = decodeURIComponent(query);
-
-      if (!decoded || typeof decoded !== 'string' || !decoded.includes('spotify.com')) {
-        return res.status(400).json({
-          status: false,
-          statusCode: 400,
-          creator: 'yudz',
-          message: 'Masukkan URL Spotify yang valid.'
-        });
-      }
-
       const encodeBase64 = (trackUrl, trackName, artistName) => {
         const raw = `__/:${trackUrl}:${trackName}:${artistName}`;
         return Buffer.from(raw).toString('base64');
@@ -34,7 +32,7 @@ module.exports = {
 
       // Step 1: Get metadata
       const metaRes = await axios.post('https://spotify-down.com/api/metadata', null, {
-        params: { link: decoded },
+        params: { link: url },
         headers
       });
 
@@ -42,9 +40,7 @@ module.exports = {
       if (!meta?.link || !meta?.title || !meta?.artists) {
         return res.status(500).json({
           status: false,
-          statusCode: 500,
-          creator: 'yudz',
-          message: 'Gagal mendapatkan metadata dari Spotify.'
+          error: 'Gagal mendapatkan metadata dari Spotify.'
         });
       }
 
@@ -66,28 +62,21 @@ module.exports = {
       if (!downloadUrl) {
         return res.status(500).json({
           status: false,
-          statusCode: 500,
-          creator: 'yudz',
-          message: 'Gagal mendapatkan link download.'
+          error: 'Gagal mendapatkan link download dari server.'
         });
       }
 
-      // Step 4: Fetch audio buffer
+      // Step 4: Download audio buffer
       const audioBuffer = await fetch(downloadUrl).then(r => r.buffer());
 
       res.setHeader('Content-Type', 'audio/mpeg');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${meta.title} - ${meta.artists}.mp3"`
-      );
-      res.send(audioBuffer);
-
+      res.setHeader('Content-Disposition', `inline; filename="${meta.title} - ${meta.artists}.mp3"`);
+      return res.end(audioBuffer);
     } catch (err) {
-      res.status(500).json({
+      console.error(err);
+      return res.status(500).json({
         status: false,
-        statusCode: 500,
-        creator: 'yudz',
-        message: err.message || 'Terjadi kesalahan pada server.'
+        error: err.message || 'Terjadi kesalahan server.'
       });
     }
   }
