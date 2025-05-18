@@ -10,7 +10,9 @@ module.exports = {
   params: ['url'],
   async run({ query }, res) {
     try {
-      if (!query || typeof query !== 'string' || !query.includes('spotify.com')) {
+      const decoded = decodeURIComponent(query);
+
+      if (!decoded || typeof decoded !== 'string' || !decoded.includes('spotify.com')) {
         return res.status(400).json({
           status: false,
           statusCode: 400,
@@ -32,7 +34,7 @@ module.exports = {
 
       // Step 1: Get metadata
       const metaRes = await axios.post('https://spotify-down.com/api/metadata', null, {
-        params: { link: query },
+        params: { link: decoded },
         headers
       });
 
