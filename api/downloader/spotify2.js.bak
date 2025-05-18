@@ -10,7 +10,7 @@ module.exports = {
   params: ['url'],
   async run({ query }, res) {
     const spotifydown = async (url) => {
-      if (!url || !url.includes('spotify.com')) throw new Error('Input URL dari Spotify!');
+      if (!/open\.spotify\.com/.test(url)) throw new Error('Input URL dari Spotify!');
 
       const encodeBase64 = (trackUrl, trackName, artistName) => {
         const raw = `__/:${trackUrl}:${trackName}:${artistName}`;
