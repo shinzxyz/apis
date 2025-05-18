@@ -225,10 +225,10 @@ fullPathWithParams += `${module.params?.length ? '&' : '?'}apikey=`;
     }
     
     app.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, 'docs', 'index.html'));
+        res.sendFile(path.join(__dirname, 'index.html'));
     });
 
-    app.use('/', express.static(path.join(__dirname, 'docs')));
+    app.use('/', express.static(path.join(__dirname, 'index.html')));
     
     logger.info('Loading API endpoints...');
     const allEndpoints = loadEndpointsFromDirectory('api');
