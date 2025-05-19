@@ -15,10 +15,10 @@ async function uploadToCatbox(buffer) {
 }
 
 module.exports = {
-  name: 'Smeme',
-  desc: 'Generate meme dari gambar (otomatis upload jika perlu)',
-  category: 'Maker',
-  params: ['url', 'atas', 'bawah'],
+  name: "Smeme",
+  desc: "Generate meme dari gambar (otomatis upload jika perlu)",
+  category: "Maker",
+  params: ["url", "atas", "bawah"],
   async run(req, res) {
     const { url, atas, bawah } = req.query;
     if (!url) return res.status(400).json({ status: false, error: 'Parameter url wajib diisi!' });
