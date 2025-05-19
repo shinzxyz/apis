@@ -1,37 +1,38 @@
-const axios = require('axios')
-const qs = require('qs')
-const { fromBuffer } = require('file-type')
+const axios = require('axios');
+const qs = require('qs');
+const { fromBuffer } = require('file-type');
 
-const tools = ['removebg', 'enhance', 'upscale', 'restore', 'colorize']
+const allowedModels = ['removebg', 'enhance', 'upscale', 'restore', 'colorize'];
 
 const pxpic = {
   upload: async (buffer) => {
-    const { ext, mime } = (await fromBuffer(buffer)) || {}
-    const fileName = `${Date.now()}.${ext}`
+    const fileInfo = await fromBuffer(buffer);
+    if (!fileInfo?.ext || !fileInfo?.mime)
+      throw new Error('File tidak valid atau gagal dibaca dari buffer.');
 
-    const folder = 'uploads'
+    const fileName = `${Date.now()}.${fileInfo.ext}`;
+    const folder = 'uploads';
+
     const response = await axios.post(
       'https://pxpic.com/getSignedUrl',
       { folder, fileName },
       { headers: { 'Content-Type': 'application/json' } }
-    )
+    );
 
-    const { presignedUrl } = response.data
+    const { presignedUrl } = response.data;
+    await axios.put(presignedUrl, buffer, {
+      headers: { 'Content-Type': fileInfo.mime }
+    });
 
-    await axios.put(presignedUrl, buffer, { headers: { 'Content-Type': mime } })
-
-    const cdnDomain = 'https://files.fotoenhancer.com/uploads/'
-    const sourceFileUrl = `${cdnDomain}${fileName}`
-
-    return sourceFileUrl
+    return `https://files.fotoenhancer.com/uploads/${fileName}`;
   },
 
   create: async (buffer, tool) => {
-    if (!tools.includes(tool)) {
-      return { error: `Pilih salah satu dari tools ini: ${tools.join(', ')}` }
+    if (!allowedModels.includes(tool)) {
+      return { error: `Model tidak valid. Gunakan salah satu: ${allowedModels.join(', ')}` };
     }
 
-    const url = await pxpic.upload(buffer)
+    const url = await pxpic.upload(buffer);
     const data = qs.stringify({
       imageUrl: url,
       targetFormat: 'png',
@@ -41,7 +42,7 @@ const pxpic = {
       fileOriginalExtension: 'png',
       aiFunction: tool,
       upscalingLevel: '',
-    })
+    });
 
     const config = {
       method: 'POST',
@@ -51,30 +52,36 @@ const pxpic = {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       data,
-    }
+    };
 
-    const apiResponse = await axios.request(config)
-    return apiResponse.data
-  },
-}
+    const response = await axios.request(config);
+    return response.data;
+  }
+};
 
 module.exports = {
-  name: 'Pxpic',
-  desc: 'AI Image Enhancer: removebg, upscale, restore, dll',
-  category: 'Tools',
-  params: ['tools', 'url'],
+  name: 'pxpic',
+  desc: 'AI Image Tool: removebg, enhance, restore, dll',
+  category: 'tools',
+  params: ['model', 'url'],
   run: async (req, res) => {
-    const { tools: tool, url } = req.query
-    if (!tool || !url) return res.status(400).json({ status: false, message: 'Parameter tools dan url wajib diisi' })
+    const { model: tool, url } = req.query;
+    if (!tool || !url)
+      return res.status(400).json({ status: false, error: 'Parameter model dan url wajib diisi.' });
+
+    if (!allowedModels.includes(tool)) {
+      return res.status(400).json({ status: false, error: `Model tidak valid. Pilih: ${allowedModels.join(', ')}` });
+    }
 
     try {
-      const response = await axios.get(url, { responseType: 'arraybuffer' })
-      const buffer = Buffer.from(response.data)
+      const imgRes = await axios.get(url, { responseType: 'arraybuffer' });
+      const buffer = Buffer.from(imgRes.data);
 
-      const result = await pxpic.create(buffer, tool)
-      return res.json({ status: true, result })
+      const result = await pxpic.create(buffer, tool);
+      return res.status(200).json({ status: true, result });
     } catch (e) {
-      return res.status(500).json({ status: false, message: e.message || e.toString() })
+      console.error('Pxpic error:', e?.response?.data || e.message);
+      return res.status(500).json({ status: false, error: e.message });
     }
-  },
-}
+  }
+};
