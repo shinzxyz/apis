@@ -60,10 +60,11 @@ const pxpic = {
 };
 
 module.exports = {
-  name: 'pxpic',
+  name: 'Pxpic',
   desc: 'AI Image Tool: removebg, enhance, restore, dll',
-  category: 'tools',
+  category: 'Tools',
   params: ['model', 'url'],
+  run: async (rdel', 'url'],
   run: async (req, res) => {
     const { model: tool, url } = req.query;
     if (!tool || !url)
