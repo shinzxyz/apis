@@ -104,29 +104,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const obfuscationResult = JavaScriptObfuscator.obfuscate(code, {
-    compact: true,
-    controlFlowFlattening: true,
-    controlFlowFlatteningThreshold: 1,
-    deadCodeInjection: true,
-    deadCodeInjectionThreshold: 0.5,
-    debugProtection: false,
-    identifierNamesGenerator: 'hexadecimal',
-    identifiersPrefix: '㡫YoedzXy㠽',
-    renameGlobals: true,
-    renameProperties: false, // <- MATIKAN INI!
-    reservedNames: [],
-    rotateStringArray: true,
-    selfDefending: true,
-    shuffleStringArray: true,
-    splitStrings: true,
-    stringArray: true,
-    stringArrayEncoding: ['rc4'],
-    stringArrayThreshold: 1,
-    transformObjectKeys: true,
-    unicodeEscapeSequence: true,
-    domainLock: [],
-    seed: 0
-});
+            compact: true,
+            controlFlowFlattening: true,
+            controlFlowFlatteningThreshold: 1,
+            deadCodeInjection: true,
+            deadCodeInjectionThreshold: 0.5,
+            debugProtection: false,
+            identifierNamesGenerator: 'hexadecimal',
+            identifiersPrefix: '㡫YoedzXy㠽',
+            renameGlobals: true,
+            renameProperties: true,
+            reservedNames: [],
+            rotateStringArray: true,
+            selfDefending: true,
+            shuffleStringArray: true,
+            splitStrings: true,
+            stringArray: true,
+            stringArrayEncoding: ['rc4'],
+            stringArrayThreshold: 1,
+            transformObjectKeys: true,
+            unicodeEscapeSequence: true,
+            domainLock: [],
+            seed: 0
+        });
 
         return obfuscationResult.getObfuscatedCode();
     }
