@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         
         setupApiLinks(set);
         setupApiContent(endpoints);
-        window.allEndpointsData = endpoints;
         setupApiButtonHandlers(endpoints);
         setupSearchFunctionality();
     } catch (error) {
@@ -432,22 +431,16 @@ function openApiModal(name, endpoint, description, method) {
     const searchInput = document.getElementById('api-search');
     if (!searchInput) return;
 
-    searchInput.addEventListener('input', function (e) {
-        const searchTerm = e.target.value.toLowerCase().trim();
-
-        // Aktifkan tag kategori ALL
-        document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('active'));
-        document.querySelector('.category-tag[data-category="all"]')?.classList.add('active');
-
-        // Jika input kosong, tampilkan semua
+    // Fungsi untuk melakukan pencarian
+    function performSearch(searchTerm) {
+        // Jika input kosong, tampilkan semua endpoint dari kategori yang aktif
         if (!searchTerm) {
-            document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('active'));
-            document.querySelector('.category-tag[data-category="all"]')?.classList.add('active');
-            renderEndpoints(window.allEndpointsData, 'all');
+            const activeCategory = document.querySelector('.category-tag.active')?.dataset.category || 'all';
+            renderEndpoints(window.allEndpointsData, activeCategory);
             return;
         }
 
-        // Filter semua endpoints dari data global
+        // Filter semua endpoint dari data global
         const filteredCategories = window.allEndpointsData.map(category => {
             const filteredItems = Object.entries(category.items)
                 .filter(([name, item]) => {
@@ -463,9 +456,28 @@ function openApiModal(name, endpoint, description, method) {
             };
         }).filter(cat => Object.keys(cat.items).length > 0);
 
-        // Render hasil pencarian
+        // Render hasil pencarian dengan kategori 'all'
         renderEndpoints(filteredCategories, 'all');
+        
+        // Aktifkan kategori 'all' saat melakukan pencarian
+        document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('active'));
+        document.querySelector('.category-tag[data-category="all"]')?.classList.add('active');
+    }
+
+    // Event listener untuk input pencarian
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        performSearch(searchTerm);
     });
+
+    // Tambahkan event listener untuk tombol clear search (jika ada)
+    const clearSearchBtn = document.querySelector('.clear-search');
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            performSearch('');
+        });
+    }
 }
     
     function openApiModal(name, endpoint, description, method) {
