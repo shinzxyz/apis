@@ -431,53 +431,58 @@ function openApiModal(name, endpoint, description, method) {
     const searchInput = document.getElementById('api-search');
     if (!searchInput) return;
 
-    // Fungsi untuk melakukan pencarian
-    function performSearch(searchTerm) {
-        // Jika input kosong, tampilkan semua endpoint dari kategori yang aktif
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const activeCategory = document.querySelector('.category-tag.active')?.dataset.category;
+        
+        // Jika search kosong, tampilkan semua endpoint di kategori yang aktif
         if (!searchTerm) {
-            const activeCategory = document.querySelector('.category-tag.active')?.dataset.category || 'all';
             renderEndpoints(window.allEndpointsData, activeCategory);
             return;
         }
 
-        // Filter semua endpoint dari data global
-        const filteredCategories = window.allEndpointsData.map(category => {
-            const filteredItems = Object.entries(category.items)
-                .filter(([name, item]) => {
-                    const data = item[name] || {};
-                    return name.toLowerCase().includes(searchTerm) ||
-                        (data.desc || '').toLowerCase().includes(searchTerm);
-                })
-                .map(([name, item]) => ({ [name]: item }));
+        // Filter berdasarkan:
+        // 1. Kategori yang aktif (kecuali 'all')
+        // 2. Search term
+        const filteredCategories = window.allEndpointsData
+            .filter(category => 
+                activeCategory === 'all' || 
+                category.name.toLowerCase() === activeCategory
+            )
+            .map(category => {
+                const filteredItems = Object.entries(category.items)
+                    .filter(([name, itemData]) => {
+                        const item = itemData[name];
+                        return name.toLowerCase().includes(searchTerm) ||
+                               (item.desc || '').toLowerCase().includes(searchTerm);
+                    })
+                    .reduce((acc, [name, itemData]) => {
+                        acc[name] = itemData;
+                        return acc;
+                    }, {});
 
-            return {
-                name: category.name,
-                items: Object.assign({}, ...filteredItems)
-            };
-        }).filter(cat => Object.keys(cat.items).length > 0);
+                return {
+                    ...category,
+                    items: filteredItems
+                };
+            })
+            .filter(category => Object.keys(category.items).length > 0);
 
-        // Render hasil pencarian dengan kategori 'all'
-        renderEndpoints(filteredCategories, 'all');
-        
-        // Aktifkan kategori 'all' saat melakukan pencarian
-        document.querySelectorAll('.category-tag').forEach(tag => tag.classList.remove('active'));
-        document.querySelector('.category-tag[data-category="all"]')?.classList.add('active');
-    }
-
-    // Event listener untuk input pencarian
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        performSearch(searchTerm);
+        // Render hasil filter TANPA mengubah kategori aktif
+        renderEndpoints(filteredCategories, activeCategory);
     });
 
-    // Tambahkan event listener untuk tombol clear search (jika ada)
-    const clearSearchBtn = document.querySelector('.clear-search');
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            performSearch('');
-        });
-    }
+    // Clear search button (opsional)
+    const clearSearch = document.createElement('button');
+    clearSearch.innerHTML = '×';
+    clearSearch.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600';
+    clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+    });
+    
+    searchInput.parentNode.style.position = 'relative';
+    searchInput.parentNode.appendChild(clearSearch);
 }
     
     function openApiModal(name, endpoint, description, method) {
