@@ -427,93 +427,40 @@ function openApiModal(name, endpoint, description, method) {
         });
     }
     
-    function setupSearchFunctionality() {
-  const searchInput = document.getElementById('api-search');
-  if (!searchInput) return;
+    function setupSearchFunctionality(endpoints) {
+    const searchInput = document.getElementById('api-search');
+    if (!searchInput) return;
 
-  let originalData = [];
+    searchInput.addEventListener('input', function (e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
 
-  function captureOriginalData() {
-    const result = [];
-    const categories = document.querySelectorAll('#api-content h3');
+        // Kalau kosong, render kategori aktif seperti biasa
+        if (!searchTerm) {
+            const selected = document.querySelector('.category-tag.active');
+            const category = selected ? selected.dataset.category : 'all';
+            renderEndpoints(endpoints, category);
+            return;
+        }
 
-    categories.forEach(category => {
-      const nextElement = category.nextElementSibling;
-      if (nextElement && nextElement.classList.contains('api-endpoints')) {
-        const items = Array.from(nextElement.querySelectorAll('div[data-name]')).map(item => ({
-          element: item.cloneNode(true),
-          name: item.dataset.name,
-          desc: item.dataset.desc
-        }));
+        // Buat salinan filtered dari semua kategori
+        const filtered = endpoints.map(category => {
+            const filteredItems = Object.entries(category.items)
+                .filter(([key, value]) => {
+                    const itemName = key.toLowerCase();
+                    const item = value[key] || {};
+                    const desc = (item.desc || '').toLowerCase();
+                    return itemName.includes(searchTerm) || desc.includes(searchTerm);
+                });
 
-        result.push({
-          categoryElement: category,
-          rowElement: nextElement,
-          items: items
-        });
-      }
+            return {
+                ...category,
+                items: Object.fromEntries(filteredItems)
+            };
+        }).filter(cat => Object.keys(cat.items).length > 0);
+
+        // Render ulang semua kategori yang hasil pencariannya ada
+        renderEndpoints(filtered, 'all');
     });
-
-    return result;
-  }
-
-  function restoreOriginalData() {
-    if (!originalData) return;
-
-    originalData.forEach(categoryData => {
-      categoryData.categoryElement.classList.remove('hidden');
-      const row = categoryData.rowElement;
-      row.innerHTML = '';
-
-      categoryData.items.forEach((item, index) => {
-        const newItem = item.element.cloneNode(true);
-        newItem.className = index === categoryData.items.length - 1 ? 'w-full mb-5' : 'w-full mb-2';
-        row.appendChild(newItem);
-      });
-    });
-  }
-
-  originalData = captureOriginalData();
-
-  searchInput.addEventListener('input', function (e) {
-    const searchTerm = e.target.value.toLowerCase().trim();
-
-    if (!searchTerm) {
-      restoreOriginalData();
-      return;
-    }
-
-    originalData.forEach(categoryData => {
-      const visibleItems = categoryData.items.filter(item => {
-        const title = item.name?.toLowerCase() || '';
-        const desc = item.desc?.toLowerCase() || '';
-        return title.includes(searchTerm) || desc.includes(searchTerm);
-      });
-
-      if (visibleItems.length === 0) {
-        categoryData.categoryElement.classList.add('hidden');
-        categoryData.rowElement.innerHTML = '';
-      } else {
-        categoryData.categoryElement.classList.remove('hidden');
-        categoryData.rowElement.innerHTML = '';
-
-        visibleItems.forEach((item, index) => {
-          const newItem = item.element.cloneNode(true);
-          newItem.className = index === visibleItems.length - 1 ? 'w-full mb-5' : 'w-full mb-2';
-
-          const button = newItem.querySelector('.get-api-btn');
-          const originalBtn = item.element.querySelector('.get-api-btn');
-          if (button && originalBtn) {
-            button.dataset.apiPath = originalBtn.dataset.apiPath || '';
-            button.dataset.apiName = originalBtn.dataset.apiName || '';
-            button.dataset.apiDesc = originalBtn.dataset.apiDesc || '';
-          }
-
-          categoryData.rowElement.appendChild(newItem);
-        });
-      }
-    });
-  });
 }
     
     function openApiModal(name, endpoint, description, method) {
