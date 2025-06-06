@@ -432,13 +432,16 @@ function openApiModal(name, endpoint, description, method) {
     if (!searchInput) return;
 
     let originalEndpoints = null;
-    let currentCategory = 'all'; // Tambahkan variabel untuk melacak kategori aktif
+    let currentCategory = 'all'; // Tambahkan variabel untuk menyimpan kategori aktif
 
-    // Tambahkan event listener untuk memperbarui kategori aktif
+    // Tambahkan event listener untuk mengupdate currentCategory saat kategori diubah
     document.querySelector('.category-nav').addEventListener('click', function(e) {
         if (e.target.classList.contains('category-tag')) {
             currentCategory = e.target.dataset.category;
-            applySearchFilter(); // Terapkan pencarian ulang saat kategori berubah
+            // Trigger pencarian ulang jika ada nilai di search input
+            if (searchInput.value.trim()) {
+                searchInput.dispatchEvent(new Event('input'));
+            }
         }
     });
 
@@ -470,23 +473,44 @@ function openApiModal(name, endpoint, description, method) {
         return result;
     }
 
-    function applySearchFilter() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
+    function restoreOriginalData() {
+        if (!originalEndpoints) return;
 
         originalEndpoints.forEach(categoryData => {
-            // Filter berdasarkan kategori aktif
-            const isCategoryMatch = currentCategory === 'all' || 
-                                  categoryData.categoryName === currentCategory;
+            // Sembunyikan semua kategori terlebih dahulu
+            categoryData.categoryElement.classList.add('hidden');
+            
+            // Tampilkan hanya yang sesuai dengan kategori aktif
+            if (currentCategory === 'all' || categoryData.categoryName === currentCategory) {
+                categoryData.categoryElement.classList.remove('hidden');
+                categoryData.endpointsGrid.innerHTML = '';
+                categoryData.items.forEach(item => {
+                    categoryData.endpointsGrid.appendChild(item.element.cloneNode(true));
+                });
+            }
+        });
+    }
 
-            // Filter berdasarkan pencarian
+    originalEndpoints = captureOriginalData();
+
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+
+        if (!searchTerm) {
+            restoreOriginalData();
+            return;
+        }
+
+        originalEndpoints.forEach(categoryData => {
+            // Filter berdasarkan kategori aktif DAN pencarian
+            const shouldShowCategory = currentCategory === 'all' || categoryData.categoryName === currentCategory;
+            
             const visibleItems = categoryData.items.filter(item => {
-                if (!isCategoryMatch) return false;
+                if (!shouldShowCategory) return false;
                 
                 const title = item.name?.toLowerCase() || '';
                 const desc = item.desc?.toLowerCase() || '';
-                return searchTerm === '' || 
-                       title.includes(searchTerm) || 
-                       desc.includes(searchTerm);
+                return title.includes(searchTerm) || desc.includes(searchTerm);
             });
 
             categoryData.endpointsGrid.innerHTML = '';
@@ -500,12 +524,6 @@ function openApiModal(name, endpoint, description, method) {
                 });
             }
         });
-    }
-
-    originalEndpoints = captureOriginalData();
-
-    searchInput.addEventListener('input', function() {
-        applySearchFilter();
     });
 }
     
