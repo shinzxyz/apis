@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         setContent('api-info', 'href', set.info_url);
         
         setupApiLinks(set);
+        window.allEndpointsData = endpoints; // simpan ke global
         setupApiContent(endpoints);
-        window.allEndpointsData = endpoints;
         setupApiButtonHandlers(endpoints);
         setupSearchFunctionality();
     } catch (error) {
