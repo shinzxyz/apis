@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         setupApiLinks(set);
         setupApiContent(endpoints);
         setupApiButtonHandlers(endpoints);
-        setupSearchFunctionality(endpoints); // <-- ini harus dipanggil dengan data
+        setupSearchFunctionality();
     } catch (error) {
         console.error('Error loading configuration:', error);
     }
@@ -427,42 +427,81 @@ function openApiModal(name, endpoint, description, method) {
         });
     }
     
-    function setupSearchFunctionality(endpoints) {
+    function setupSearchFunctionality() {
     const searchInput = document.getElementById('api-search');
     if (!searchInput) return;
 
-    searchInput.addEventListener('input', function (e) {
+    let originalEndpoints = null;
+
+    function captureOriginalData() {
+        const categories = document.querySelectorAll('.api-category');
+        const result = [];
+
+        categories.forEach(category => {
+            const categoryTitle = category.querySelector('.api-category-title h3');
+            const endpointsGrid = category.querySelector('.api-endpoints');
+            
+            const items = Array.from(endpointsGrid.querySelectorAll('.api-endpoint')).map(item => {
+                return {
+                    element: item.cloneNode(true),
+                    name: item.dataset.name,
+                    desc: item.dataset.desc,
+                    category: categoryTitle.textContent
+                };
+            });
+
+            result.push({
+                categoryElement: category,
+                categoryTitle: categoryTitle,
+                endpointsGrid: endpointsGrid,
+                items: items
+            });
+        });
+
+        return result;
+    }
+
+    function restoreOriginalData() {
+        if (!originalEndpoints) return;
+
+        originalEndpoints.forEach(categoryData => {
+            categoryData.categoryElement.classList.remove('hidden');
+            categoryData.endpointsGrid.innerHTML = '';
+
+            categoryData.items.forEach(item => {
+                categoryData.endpointsGrid.appendChild(item.element.cloneNode(true));
+            });
+        });
+    }
+
+    originalEndpoints = captureOriginalData();
+
+    searchInput.addEventListener('input', function(e) {
         const searchTerm = e.target.value.toLowerCase().trim();
 
-        // Ambil kategori yang sedang aktif
-        const activeCategory = document.querySelector('.category-tag.active')?.dataset.category || 'all';
-
-        // Kalau input kosong, render ulang sesuai kategori aktif
         if (!searchTerm) {
-            renderEndpoints(endpoints, activeCategory);
+            restoreOriginalData();
             return;
         }
 
-        // Filter berdasarkan kategori aktif
-        const filtered = endpoints
-            .filter(category => activeCategory === 'all' || category.name.toLowerCase() === activeCategory)
-            .map(category => {
-                const matchedItems = Object.entries(category.items).filter(([itemName, itemData]) => {
-                    const item = itemData[itemName];
-                    return (
-                        itemName.toLowerCase().includes(searchTerm) ||
-                        (item.desc || '').toLowerCase().includes(searchTerm)
-                    );
+        originalEndpoints.forEach(categoryData => {
+            const visibleItems = categoryData.items.filter(item => {
+                const title = item.name?.toLowerCase() || '';
+                const desc = item.desc?.toLowerCase() || '';
+                return title.includes(searchTerm) || desc.includes(searchTerm);
+            });
+
+            categoryData.endpointsGrid.innerHTML = '';
+
+            if (visibleItems.length === 0) {
+                categoryData.categoryElement.classList.add('hidden');
+            } else {
+                categoryData.categoryElement.classList.remove('hidden');
+                visibleItems.forEach(item => {
+                    categoryData.endpointsGrid.appendChild(item.element.cloneNode(true));
                 });
-
-                return {
-                    ...category,
-                    items: Object.fromEntries(matchedItems)
-                };
-            }).filter(cat => Object.keys(cat.items).length > 0);
-
-        // Render ulang hasil pencarian
-        renderEndpoints(filtered, 'all');
+            }
+        });
     });
 }
     
