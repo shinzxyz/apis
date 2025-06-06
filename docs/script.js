@@ -434,31 +434,34 @@ function openApiModal(name, endpoint, description, method) {
     searchInput.addEventListener('input', function (e) {
         const searchTerm = e.target.value.toLowerCase().trim();
 
-        // Kalau kosong, render kategori aktif seperti biasa
+        // Ambil kategori yang sedang aktif
+        const activeCategory = document.querySelector('.category-tag.active')?.dataset.category || 'all';
+
+        // Kalau input kosong, render ulang sesuai kategori aktif
         if (!searchTerm) {
-            const selected = document.querySelector('.category-tag.active');
-            const category = selected ? selected.dataset.category : 'all';
-            renderEndpoints(endpoints, category);
+            renderEndpoints(endpoints, activeCategory);
             return;
         }
 
-        // Buat salinan filtered dari semua kategori
-        const filtered = endpoints.map(category => {
-            const filteredItems = Object.entries(category.items)
-                .filter(([key, value]) => {
-                    const itemName = key.toLowerCase();
-                    const item = value[key] || {};
-                    const desc = (item.desc || '').toLowerCase();
-                    return itemName.includes(searchTerm) || desc.includes(searchTerm);
+        // Filter berdasarkan kategori aktif
+        const filtered = endpoints
+            .filter(category => activeCategory === 'all' || category.name.toLowerCase() === activeCategory)
+            .map(category => {
+                const matchedItems = Object.entries(category.items).filter(([itemName, itemData]) => {
+                    const item = itemData[itemName];
+                    return (
+                        itemName.toLowerCase().includes(searchTerm) ||
+                        (item.desc || '').toLowerCase().includes(searchTerm)
+                    );
                 });
 
-            return {
-                ...category,
-                items: Object.fromEntries(filteredItems)
-            };
-        }).filter(cat => Object.keys(cat.items).length > 0);
+                return {
+                    ...category,
+                    items: Object.fromEntries(matchedItems)
+                };
+            }).filter(cat => Object.keys(cat.items).length > 0);
 
-        // Render ulang semua kategori yang hasil pencariannya ada
+        // Render ulang hasil pencarian
         renderEndpoints(filtered, 'all');
     });
 }
